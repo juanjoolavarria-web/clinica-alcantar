@@ -1,0 +1,19 @@
+{
+  "name": "Clínica Alcántar",
+  "short_name": "Clínica",
+  "description": "Registro de tratamientos e ingresos",
+  "start_url": "/clinica-alcantar/",
+  "scope": "/clinica-alcantar/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0B1120",
+  "theme_color": "#0B1120",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
