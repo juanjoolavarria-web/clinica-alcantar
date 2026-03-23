@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Clínica">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0B1120">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="icon" href="icon.svg">
+<title>Clínica Alcántar</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:'DM Sans',sans-serif;background:#0B1120;color:#F1F5F9}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:#1E293B;border-radius:4px}
+input,select,button,textarea{font-family:'DM Sans',sans-serif;outline:none}
+input[type="date"]{color-scheme:dark}
+
+.app{max-width:720px;margin:0 auto;height:100vh;height:100dvh;display:flex;flex-direction:column;position:relative;overflow:hidden}
+
+/* NAV */
+.nav{display:flex;justify-content:space-around;background:#0D1424;border-top:1px solid #1E293B;padding:6px 0 max(10px,env(safe-area-inset-bottom));flex-shrink:0}
+.nav-btn{background:none;border:none;border-top:2px solid transparent;color:#475569;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 20px;cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif}
+.nav-btn.active{border-top-color:#10B981;color:#10B981}
+.nav-btn .icon{font-size:20px}
+.nav-btn .label{font-size:10px;letter-spacing:1px}
+
+/* VIEWS */
+.view{flex:1;overflow-y:auto;padding:16px 16px 0;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column}
+.view.form-view{padding-bottom:24px;display:block;overflow-y:auto}
+.hidden{display:none!important}
+
+/* HEADER */
+.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;padding-top:max(8px,env(safe-area-inset-top));flex-shrink:0}
+.title{font-size:20px;font-weight:800;letter-spacing:4px;font-family:'JetBrains Mono',monospace;color:#F1F5F9}
+.subtitle{font-size:11px;letter-spacing:2px;margin-top:2px;font-weight:700;color:#10B981}
+.back-btn{background:none;border:none;color:#64748B;font-size:13px;cursor:pointer;padding:4px 0}
+.form-title{font-size:14px;font-weight:700;letter-spacing:1px;color:#10B981}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;flex-shrink:0}
+.stat-card{background:#131C2E;border-radius:10px;padding:14px 12px;display:flex;flex-direction:column;gap:4px}
+.stat-card.big{grid-column:span 2}
+.stat-val{font-family:'JetBrains Mono',monospace;font-weight:800}
+.stat-val.big{font-size:28px;color:#10B981}
+.stat-val.sm{font-size:20px;color:#94A3B8}
+.stat-label{font-size:10px;color:#64748B;letter-spacing:1.5px;text-transform:uppercase}
+
+/* BUTTONS */
+.big-btn{width:100%;padding:14px;border:none;border-radius:10px;color:#0B1120;font-size:14px;font-weight:800;letter-spacing:2px;cursor:pointer;flex-shrink:0;background:#10B981;transition:opacity .15s}
+.big-btn:active{opacity:.8}
+.new-btn{background:#10B981;border:none;border-radius:8px;color:#0B1120;font-size:11px;font-weight:800;padding:8px 14px;cursor:pointer;letter-spacing:1px}
+
+/* FORM */
+.lbl{display:block;color:#64748B;font-size:11px;letter-spacing:1px;text-transform:uppercase;margin:12px 0 4px}
+.inp{width:100%;padding:10px 12px;background:#131C2E;border:1px solid #1E293B;border-radius:8px;color:#F1F5F9;font-size:14px}
+.inp:focus{border-color:#10B981}
+.inp-big{font-size:20px;font-weight:700;text-align:center;letter-spacing:1px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:2px}
+.chip{padding:7px 10px;border-radius:8px;border:1px solid #1E293B;background:#0B1120;color:#94A3B8;font-size:11px;cursor:pointer;font-weight:500;white-space:nowrap;transition:all .1s}
+.chip.on{background:#10B981;color:#0B1120;border-color:#10B981}
+.chip:active{opacity:.7}
+
+/* TABLE */
+.section-label{color:#475569;font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;flex-shrink:0}
+.tbl-section{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;margin-top:4px}
+.tbl-wrap{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;border:1px solid #1E293B;border-radius:8px;overscroll-behavior:contain}
+.tbl{width:100%;border-collapse:collapse;min-width:580px;font-size:12px}
+.tbl thead{position:sticky;top:0;z-index:2}
+.tbl th{background:#131C2E;color:#64748B;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:8px 8px;text-align:left;border-bottom:1px solid #1E293B;white-space:nowrap}
+.tbl td{padding:8px 8px;border-bottom:1px solid #0F172A;color:#CBD5E1;white-space:nowrap;vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#131C2E}
+.tbl .mono{font-family:'JetBrains Mono',monospace;font-weight:700}
+.tbl .muted{color:#64748B;font-family:'JetBrains Mono',monospace;font-size:11px}
+.tbl .tgreen{color:#10B981;font-family:'JetBrains Mono',monospace;font-size:12px}
+.tbl .badge-amber{background:#F59E0B;color:#0B1120;font-size:9px;padding:2px 6px;border-radius:3px;font-weight:800;letter-spacing:.5px}
+.tbl .act-btn{background:none;border:none;color:#475569;font-size:12px;cursor:pointer;padding:2px 5px;border-radius:4px}
+.tbl .act-btn:hover{color:#F1F5F9;background:#1E293B}
+.tbl .act-del:hover{color:#EF4444}
+
+/* INGRESOS */
+.ing-row{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#131C2E;border-radius:8px;margin-bottom:6px;cursor:pointer;transition:background .1s}
+.ing-row:active{background:#1E293B}
+.ing-row.cur{border-left:2px solid #10B981}
+.ing-mes{font-size:11px;letter-spacing:1px;color:#94A3B8;text-transform:uppercase;font-weight:700;min-width:60px}
+.ing-vals{display:flex;gap:14px;align-items:center}
+.ing-v{text-align:right}
+.ing-v .v{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:#F1F5F9}
+.ing-v .v.g{color:#10B981}
+.ing-v .v.a{color:#F59E0B}
+.ing-v .k{font-size:9px;color:#475569;letter-spacing:.5px;text-transform:uppercase}
+.ing-empty{color:#1E293B;font-family:'JetBrains Mono',monospace;font-size:12px}
+
+/* HONORARIOS */
+.hon-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.hon-card{background:#131C2E;border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center}
+.hon-name{font-size:12px;color:#94A3B8}
+.hon-val{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:#10B981}
+
+/* CALC HINT */
+.calc-hint{background:#131C2E;border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12px;color:#64748B;border-left:2px solid #10B981;min-height:40px}
+.calc-hint span{color:#10B981;font-weight:700;font-family:'JetBrains Mono',monospace}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:150;padding:20px;animation:fadeIn .15s ease}
+.modal{background:#131C2E;border-radius:12px;padding:20px;max-width:320px;width:100%}
+.modal p{color:#94A3B8;font-size:13px;margin-bottom:16px;line-height:1.5}
+.modal h3{color:#F1F5F9;font-size:13px;font-weight:700;letter-spacing:1px;margin-bottom:12px;font-family:'JetBrains Mono',monospace}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end}
+.modal-btn{padding:9px 18px;border:none;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;letter-spacing:.5px}
+
+/* TOAST */
+.toast{position:fixed;top:max(16px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:#10B981;color:#0B1120;padding:10px 20px;border-radius:10px;font-weight:700;font-size:12px;z-index:200;animation:slideUp .3s ease;letter-spacing:.5px;white-space:nowrap;pointer-events:none}
+
+.empty{color:#475569;text-align:center;padding:40px 20px;font-size:13px;letter-spacing:1px;line-height:2}
+
+@keyframes slideUp{from{transform:translateY(12px) translateX(-50%);opacity:0}to{transform:translateY(0) translateX(-50%);opacity:1}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- HOME VIEW -->
+  <div id="homeView" class="view">
+    <div class="header">
+      <div>
+        <h1 class="title">CLÍNICA</h1>
+        <p class="subtitle">🦷 ALCÁNTAR</p>
+      </div>
+      <button class="new-btn" onclick="openForm(null)">+ NUEVO</button>
+    </div>
+    <div class="stats-grid" id="homeStats"></div>
+    <div class="chips" id="monthChips" style="margin-bottom:10px;flex-shrink:0"></div>
+    <div class="section-label" id="monthLabel"></div>
+    <div class="tbl-section">
+      <div class="tbl-wrap" id="tblWrap"></div>
+    </div>
+  </div>
+
+  <!-- INGRESOS VIEW -->
+  <div id="ingView" class="view hidden">
+    <div class="header">
+      <div>
+        <h1 class="title">INGRESOS</h1>
+        <p class="subtitle">RESUMEN 2026</p>
+      </div>
+    </div>
+    <div class="stats-grid" id="ingStats"></div>
+    <div class="section-label" style="flex-shrink:0;margin-top:4px">DETALLE MENSUAL</div>
+    <div style="overflow-y:auto;flex:1;padding-bottom:12px;margin-top:8px" id="ingList"></div>
+  </div>
+
+  <!-- HONORARIOS VIEW -->
+  <div id="honView" class="view hidden">
+    <div class="header">
+      <div>
+        <h1 class="title">HONORARIOS</h1>
+        <p class="subtitle">TABLA DE REFERENCIA</p>
+      </div>
+    </div>
+    <p style="font-size:12px;color:#475569;margin-bottom:14px;line-height:1.6;flex-shrink:0">
+      Prestaciones con honorarios fijos especiales.<br>No se aplica el 40% estándar.
+    </p>
+    <div class="hon-grid" id="honList"></div>
+  </div>
+
+  <!-- FORM VIEW -->
+  <div id="formView" class="view form-view hidden">
+    <div class="header" style="margin-bottom:8px;padding-bottom:0">
+      <button class="back-btn" onclick="closeForm()">← Volver</button>
+      <span class="form-title" id="formTitle">NUEVO TRATAMIENTO</span>
+    </div>
+    <div id="formContent"></div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="nav" id="mainNav">
+    <button class="nav-btn active" id="nav-home" onclick="showTab('home')">
+      <span class="icon">🦷</span><span class="label">INICIO</span>
+    </button>
+    <button class="nav-btn" id="nav-ing" onclick="showTab('ing')">
+      <span class="icon">💰</span><span class="label">INGRESOS</span>
+    </button>
+    <button class="nav-btn" id="nav-hon" onclick="showTab('hon')">
+      <span class="icon">📋</span><span class="label">TABLA</span>
+    </button>
+  </nav>
+</div>
+
+<div id="overlayEl"></div>
+<div id="toastEl"></div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+const HONORARIOS_FIJOS = [
+  {nombre:'Incrustación', monto:90000},
+  {nombre:'Prótesis',     monto:100000},
+  {nombre:'Plano',        monto:100000},
+  {nombre:'Escaneo',      monto:30000},
+  {nombre:'Escaneo + Foto', monto:54000},
+  {nombre:'Endodoncia M', monto:90000},
+  {nombre:'Endodoncia PM',monto:80000},
+  {nombre:'Endodoncia A', monto:70000}
+];
+
+const SEED = [
+  {mes:'Enero',paciente:'Paula Marin Hurtado',fecha:'2026-01-05',prestacion:'LC',costo:90000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Enero',paciente:'Isidora Ravera',fecha:'2026-01-05',prestacion:'Urgencia',costo:67500,boleta:null,honorarios:null,comentario:null},
+  {mes:'Enero',paciente:'Simona Migliaro Munita',fecha:'2026-01-05',prestacion:'Sellante p.3.7',costo:40000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Enero',paciente:'Vanessa Leyton',fecha:null,prestacion:'Endodoncia p. 1.7',costo:299000,boleta:'701',honorarios:90000,comentario:null},
+  {mes:'Enero',paciente:'María Alejandra Dafonseca',fecha:'2026-01-07',prestacion:'LC',costo:90000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Enero',paciente:'Eva Gil Paniagua',fecha:'2026-01-07',prestacion:'LC + flúor',costo:66000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Enero',paciente:'Sebastián Díaz Lathop',fecha:'2026-01-07',prestacion:'Exodoncia p. 1.7',costo:75000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Enero',paciente:'Ivan Eduardo Domic',fecha:'2026-01-07',prestacion:'LC',costo:75000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Enero',paciente:'Ignacio Quezada',fecha:'2026-01-14',prestacion:'Mantención periodontal',costo:60000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Enero',paciente:'Catalina Cerpa Godoy',fecha:'2026-01-19',prestacion:'LC, sellantes y flúor',costo:71500,boleta:null,honorarios:null,comentario:null},
+  {mes:'Enero',paciente:'Pablo Lineros',fecha:'2026-01-19',prestacion:'RC p. 2.3',costo:67500,boleta:null,honorarios:null,comentario:null},
+  {mes:'Enero',paciente:'Naife Alul Barria',fecha:'2026-01-19',prestacion:'RC p. 4',costo:96000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Enero',paciente:'José Ignacio Isla Lara',fecha:'2026-01-19',prestacion:'RC p. 1.4',costo:63000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Enero',paciente:'Daniela Ortega',fecha:'2026-01-21',prestacion:'LC',costo:90000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Enero',paciente:'Francisco Ceric',fecha:'2026-01-26',prestacion:'RC pre incrustación',costo:60300,boleta:null,honorarios:null,comentario:null},
+  {mes:'Enero',paciente:'Maximiliano Lanz Liddle',fecha:'2026-01-26',prestacion:'RC simple + LC flúor',costo:192000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Enero',paciente:'Ignacio Jara Bunster',fecha:'2026-01-28',prestacion:'Alveolitis',costo:68000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Enero',paciente:'Susan Liddle Faille',fecha:'2026-01-28',prestacion:'LC y flúor',costo:90000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Enero',paciente:'Mercedes Lanz Liddle',fecha:'2026-01-28',prestacion:'LC',costo:60000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Enero',paciente:'Lilian Morales Muriel',fecha:'2026-01-30',prestacion:'Urgencia',costo:50000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Febrero',paciente:'Lilian Morales Muriel',fecha:'2026-02-09',prestacion:'Exodoncia compleja',costo:180000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Febrero',paciente:'Juan Carlos Arias',fecha:'2026-02-11',prestacion:'LC + Flúor',costo:120000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Febrero',paciente:'Juan José Olavarría',fecha:'2026-02-11',prestacion:'LC',costo:60000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Febrero',paciente:'Agustín Briones',fecha:'2026-02-12',prestacion:'LC y flúor',costo:90000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Febrero',paciente:'Tomás Briones',fecha:'2026-02-12',prestacion:'Caries p. 3.6, 4.6, 4.7',costo:144000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Febrero',paciente:'Sofía Ortega Jimenez',fecha:'2026-02-16',prestacion:'LC y flúor',costo:90000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Febrero',paciente:'Massimo Ianuzzi',fecha:'2026-02-18',prestacion:'LC, flúor y sellante p.3',costo:130000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Febrero',paciente:'Margarita Duran',fecha:'2026-02-18',prestacion:'RC p. 4',costo:120000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Febrero',paciente:'Daniela Venegas Sandoval',fecha:'2026-02-23',prestacion:'RC p. 2, LC y flúor',costo:180000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Febrero',paciente:'Andrew Liddle Faille',fecha:'2026-02-23',prestacion:'LC y flúor',costo:90000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Febrero',paciente:'Francisco Ceric',fecha:'2026-02-25',prestacion:'LC y flúor',costo:90000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Febrero',paciente:'Florencia García',fecha:'2026-02-25',prestacion:'LC, flúor y RC cervical p.3.4-3.6',costo:315000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Febrero',paciente:'Francisco Lanz',fecha:'2026-02-25',prestacion:'LC y flúor',costo:90000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Febrero',paciente:'Domingo Díaz García',fecha:'2026-02-25',prestacion:'LC y flúor',costo:90000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Febrero',paciente:'Manuel Díaz García',fecha:'2026-02-25',prestacion:'LC y flúor',costo:90000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Febrero',paciente:'Blanca Díaz García',fecha:'2026-02-25',prestacion:'LC y flúor',costo:90000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Febrero',paciente:'Lilian Martínez',fecha:'2026-02-25',prestacion:'Endo anterior (p.8)',costo:260000,boleta:null,honorarios:70000,comentario:null},
+  {mes:'Marzo',paciente:'Isabella Ok',fecha:'2026-03-02',prestacion:'Instrucción de Higiene',costo:45000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Marzo',paciente:'Tomás Ok',fecha:'2026-03-02',prestacion:'Profilaxis y flúor',costo:60000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Marzo',paciente:'Esteban Martini Muñoz',fecha:'2026-03-04',prestacion:'Consulta y Rx',costo:63750,boleta:null,honorarios:null,comentario:null},
+  {mes:'Marzo',paciente:'Lilian Martínez',fecha:'2026-03-04',prestacion:'RC palatina p. 8',costo:90000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Marzo',paciente:'Lilian Martínez',fecha:'2026-03-09',prestacion:'LC y flúor',costo:90000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Marzo',paciente:'Lilian Martínez',fecha:'2026-03-16',prestacion:'Blanqueamiento',costo:232000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Marzo',paciente:'Sofía Ortega Jimenez',fecha:'2026-03-04',prestacion:'RC p. 3.7 y 3.5',costo:148500,boleta:null,honorarios:null,comentario:null},
+  {mes:'Marzo',paciente:'Montserrat Leonora Miranda',fecha:'2026-03-04',prestacion:'RC simple p. 9',costo:79200,boleta:null,honorarios:null,comentario:null},
+  {mes:'Marzo',paciente:'Montserrat Leonora Miranda',fecha:'2026-03-09',prestacion:'RC con protección pulpar',costo:140000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Marzo',paciente:'Lilian Morales',fecha:'2026-03-09',prestacion:'Prueba estética en cera',costo:590000,boleta:null,honorarios:100000,comentario:null},
+  {mes:'Marzo',paciente:'María Victoria Ugarte',fecha:'2026-03-09',prestacion:'LC y sellantes',costo:150000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Marzo',paciente:'Margarita María Ugarte',fecha:'2026-03-09',prestacion:'Profilaxis, 4 sellantes y flúor',costo:183000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Marzo',paciente:'Mía Ugarte',fecha:'2026-03-09',prestacion:'LC y flúor',costo:90000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Marzo',paciente:'Pancho Ceric',fecha:'2026-03-11',prestacion:'RC p. 1.6',costo:90000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Marzo',paciente:'Esteban Martini',fecha:'2026-03-11',prestacion:'TPV',costo:150000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Marzo',paciente:'Esteban Martini',fecha:'2026-03-16',prestacion:'RC p. 1.5',costo:120000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Marzo',paciente:'Esteban Martini',fecha:'2026-03-18',prestacion:'RC p. 1.6',costo:120000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Marzo',paciente:'Maximiliano Lanz Liddle',fecha:'2026-03-11',prestacion:'Entrega Plano',costo:496000,boleta:null,honorarios:100000,comentario:null},
+  {mes:'Marzo',paciente:'Jorge Martínez Castillo',fecha:'2026-03-16',prestacion:'Mantención perio',costo:170000,boleta:null,honorarios:null,comentario:null},
+  {mes:'Marzo',paciente:'Martina Clavijo Romero',fecha:'2026-03-16',prestacion:'LC, flúor y 3 sellantes',costo:150000,boleta:null,honorarios:null,comentario:'Mamá paga a fin de mes'},
+  {mes:'Marzo',paciente:'Francisco Atria Aliaga',fecha:'2026-03-18',prestacion:'LC, flúor y sellante 1.6',costo:120000,boleta:null,honorarios:null,comentario:null},
+];
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+let records;
+try {
+  const stored = localStorage.getItem('clinica_alcantar_v1');
+  records = stored ? JSON.parse(stored) : SEED.map(r => ({...r, id: uid()}));
+} catch(e) {
+  records = SEED.map(r => ({...r, id: uid()}));
+}
+const persist = () => { try { localStorage.setItem('clinica_alcantar_v1', JSON.stringify(records)); } catch(e){} };
+
+let activeMonth = 'Marzo';
+let editingId = null;
+let activeTab = 'home';
+
+// ─── UTILS ───────────────────────────────────────────────────────────────────
+const clp = n => n ? '$' + Math.round(n).toLocaleString('es-CL') : '—';
+const fd  = d => { if(!d) return '—'; const [y,m,day] = d.split('-'); return `${day}/${m}/${y.slice(2)}`; };
+
+function calcMonth(m) {
+  const rows = records.filter(r => r.mes === m);
+  let bruto = 0, p40 = 0, hon = 0;
+  rows.forEach(r => {
+    bruto += r.costo || 0;
+    if (r.honorarios) hon += r.honorarios;
+    else if (r.costo) p40 += r.costo * 0.4;
+  });
+  const total = p40 + hon;
+  return { count: rows.length, bruto, p40, hon, total, neto: total * 0.845 };
+}
+
+function toast(msg, color = '#10B981') {
+  const el = document.getElementById('toastEl');
+  el.innerHTML = `<div class="toast" style="background:${color}">${msg}</div>`;
+  setTimeout(() => el.innerHTML = '', 2600);
+}
+
+// ─── TABS ─────────────────────────────────────────────────────────────────────
+function showTab(tab) {
+  activeTab = tab;
+  ['home','ing','hon','form'].forEach(v => {
+    document.getElementById(v+'View').classList.add('hidden');
+    const nb = document.getElementById('nav-'+v);
+    if (nb) nb.classList.remove('active');
+  });
+  document.getElementById(tab+'View').classList.remove('hidden');
+  const nb = document.getElementById('nav-'+tab);
+  if (nb) nb.classList.add('active');
+  document.getElementById('mainNav').classList.remove('hidden');
+  if (tab === 'home') renderHome();
+  if (tab === 'ing')  renderIngresos();
+  if (tab === 'hon')  renderHonorarios();
+}
+
+// ─── HOME ────────────────────────────────────────────────────────────────────
+function renderHome() {
+  const st  = calcMonth(activeMonth);
+  const ytdT = MONTHS.reduce((a,m) => a + calcMonth(m).total, 0);
+  const ytdN = MONTHS.reduce((a,m) => a + calcMonth(m).neto,  0);
+
+  document.getElementById('homeStats').innerHTML = `
+    <div class="stat-card big">
+      <span class="stat-val big">${clp(st.total)}</span>
+      <span class="stat-label">Honorarios ${activeMonth}</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-val sm">${st.count}</span>
+      <span class="stat-label">Tratamientos</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-val sm" style="color:#F59E0B">${clp(ytdT)}</span>
+      <span class="stat-label">Total 2026</span>
+    </div>`;
+
+  document.getElementById('monthChips').innerHTML = MONTHS.map(m => {
+    const cnt = records.filter(r => r.mes === m).length;
+    return `<button class="chip ${m === activeMonth ? 'on' : ''}" onclick="setMonth('${m}')">${m.slice(0,3).toUpperCase()}${cnt ? ' ' + cnt : ''}</button>`;
+  }).join('');
+
+  const rows = records.filter(r => r.mes === activeMonth);
+  document.getElementById('monthLabel').textContent = `${activeMonth.toUpperCase()} — ${rows.length} TRATAMIENTOS`;
+
+  if (!rows.length) {
+    document.getElementById('tblWrap').innerHTML = `<div class="empty">SIN REGISTROS<br>Presiona + NUEVO para agregar</div>`;
+    return;
+  }
+
+  document.getElementById('tblWrap').innerHTML = `
+    <table class="tbl"><thead><tr>
+      <th>Fecha</th><th>Paciente</th><th>Prestación</th>
+      <th>Costo</th><th>Honorarios</th><th></th>
+    </tr></thead><tbody>
+    ${rows.map(r => `<tr>
+      <td class="muted">${fd(r.fecha)}</td>
+      <td style="font-weight:500;color:#F1F5F9;max-width:120px;overflow:hidden;text-overflow:ellipsis">${r.paciente || '—'}</td>
+      <td style="color:#94A3B8;max-width:130px;overflow:hidden;text-overflow:ellipsis">${r.prestacion}</td>
+      <td class="mono">${clp(r.costo)}</td>
+      <td class="tgreen">${r.honorarios
+        ? `<span class="badge-amber">${clp(r.honorarios)}</span>`
+        : r.costo ? clp(r.costo * 0.4) : '—'}</td>
+      <td><button class="act-btn" onclick="openForm('${r.id}')">✏️</button><button class="act-btn act-del" onclick="confirmDel('${r.id}')">🗑</button></td>
+    </tr>`).join('')}
+    </tbody></table>`;
+}
+
+function setMonth(m) { activeMonth = m; renderHome(); }
+
+// ─── INGRESOS ────────────────────────────────────────────────────────────────
+function renderIngresos() {
+  const ytdB = MONTHS.reduce((a,m) => a + calcMonth(m).bruto, 0);
+  const ytdT = MONTHS.reduce((a,m) => a + calcMonth(m).total, 0);
+  const ytdN = MONTHS.reduce((a,m) => a + calcMonth(m).neto,  0);
+
+  document.getElementById('ingStats').innerHTML = `
+    <div class="stat-card">
+      <span class="stat-val sm">${clp(ytdB)}</span>
+      <span class="stat-label">Bruto YTD</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-val sm" style="color:#10B981">${clp(ytdT)}</span>
+      <span class="stat-label">Honorarios YTD</span>
+    </div>
+    <div class="stat-card big">
+      <span class="stat-val big" style="font-size:24px">${clp(ytdN)}</span>
+      <span class="stat-label">Neto estimado YTD — después de retención 15,5%</span>
+    </div>`;
+
+  document.getElementById('ingList').innerHTML = MONTHS.map(m => {
+    const s = calcMonth(m);
+    if (!s.count) return `<div class="ing-row" style="opacity:.35">
+      <span class="ing-mes">${m.slice(0,3).toUpperCase()}</span>
+      <span class="ing-empty">sin datos</span>
+    </div>`;
+    return `<div class="ing-row ${m === activeMonth ? 'cur' : ''}" onclick="goToMonth('${m}')">
+      <span class="ing-mes">${m.slice(0,3).toUpperCase()} <span style="color:#475569;font-size:10px">(${s.count})</span></span>
+      <div class="ing-vals">
+        <div class="ing-v"><div class="v">${clp(s.bruto)}</div><div class="k">Bruto</div></div>
+        <div class="ing-v"><div class="v g">${clp(s.total)}</div><div class="k">Honorarios</div></div>
+        <div class="ing-v"><div class="v a">${clp(s.neto)}</div><div class="k">Neto</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function goToMonth(m) { activeMonth = m; showTab('home'); }
+
+// ─── HONORARIOS ──────────────────────────────────────────────────────────────
+function renderHonorarios() {
+  document.getElementById('honList').innerHTML = HONORARIOS_FIJOS.map(h => `
+    <div class="hon-card">
+      <span class="hon-name">${h.nombre}</span>
+      <span class="hon-val">${clp(h.monto)}</span>
+    </div>`).join('');
+}
+
+// ─── FORM ─────────────────────────────────────────────────────────────────────
+function openForm(id) {
+  editingId = id || null;
+  const entry = id ? records.find(r => r.id === id) : null;
+  document.getElementById('homeView').classList.add('hidden');
+  document.getElementById('ingView').classList.add('hidden');
+  document.getElementById('honView').classList.add('hidden');
+  document.getElementById('formView').classList.remove('hidden');
+  document.getElementById('mainNav').classList.add('hidden');
+  document.getElementById('formTitle').textContent = (entry ? 'EDITAR' : 'NUEVO') + ' TRATAMIENTO';
+
+  window._fs = {
+    mes:         entry ? entry.mes           : activeMonth,
+    fecha:       entry ? (entry.fecha || '')  : new Date().toISOString().split('T')[0],
+    paciente:    entry ? (entry.paciente||'') : '',
+    prestacion:  entry ? (entry.prestacion||'') : '',
+    costo:       entry ? String(entry.costo || '') : '',
+    boleta:      entry ? (entry.boleta || '') : '',
+    honorarios:  entry ? String(entry.honorarios || '') : '',
+    comentario:  entry ? (entry.comentario || '') : ''
+  };
+  renderForm();
+}
+
+function renderForm() {
+  const fs = window._fs;
+  const names = [...new Set(records.map(r => r.paciente).filter(Boolean))].sort();
+
+  document.getElementById('formContent').innerHTML = `
+    <datalist id="dl-pac">${names.map(n => `<option value="${n}">`).join('')}</datalist>
+
+    <label class="lbl">Mes</label>
+    <div class="chips">
+      ${MONTHS.map(m => `<button class="chip ${fs.mes===m?'on':''}" onclick="window._fs.mes='${m}';renderForm()">${m.slice(0,3).toUpperCase()}</button>`).join('')}
+    </div>
+
+    <div class="row2">
+      <div>
+        <label class="lbl">Fecha</label>
+        <input type="date" class="inp" value="${fs.fecha}" onchange="window._fs.fecha=this.value">
+      </div>
+      <div>
+        <label class="lbl">Nº Boleta</label>
+        <input class="inp" placeholder="Opcional" value="${fs.boleta}" oninput="window._fs.boleta=this.value">
+      </div>
+    </div>
+
+    <label class="lbl">Paciente</label>
+    <input class="inp" list="dl-pac" placeholder="Nombre completo" value="${fs.paciente}" oninput="window._fs.paciente=this.value" autocomplete="off">
+
+    <label class="lbl">Prestación</label>
+    <input class="inp" placeholder="Ej: LC + flúor, Endodoncia p.1.7" value="${fs.prestacion}" oninput="window._fs.prestacion=this.value">
+
+    <div class="row2">
+      <div>
+        <label class="lbl">Costo (CLP)</label>
+        <input type="number" inputmode="numeric" class="inp inp-big" placeholder="0" value="${fs.costo}" oninput="window._fs.costo=this.value;updateCalc()">
+      </div>
+      <div>
+        <label class="lbl">Honorarios esp.</label>
+        <input type="number" inputmode="numeric" class="inp inp-big" placeholder="Solo si aplica" value="${fs.honorarios}" oninput="window._fs.honorarios=this.value;updateCalc()">
+      </div>
+    </div>
+
+    <div class="calc-hint" id="calcHint">Ingresa el costo para ver el cálculo.</div>
+
+    <label class="lbl">Comentarios</label>
+    <input class="inp" placeholder="Opcional" value="${fs.comentario}" oninput="window._fs.comentario=this.value">
+
+    <button class="big-btn" style="margin-top:18px" onclick="submitForm()">
+      ${editingId ? 'ACTUALIZAR' : 'GUARDAR TRATAMIENTO'}
+    </button>`;
+
+  updateCalc();
+}
+
+function updateCalc() {
+  const fs = window._fs;
+  const costo = parseFloat(fs.costo) || 0;
+  const hon   = parseFloat(fs.honorarios) || 0;
+  const total = hon > 0 ? hon : costo * 0.4;
+  const neto  = total * 0.845;
+  const el = document.getElementById('calcHint');
+  if (!el) return;
+  if (!costo && !hon) { el.innerHTML = 'Ingresa el costo para ver el cálculo.'; return; }
+  el.innerHTML = hon > 0
+    ? `Honorarios especiales: <span>${clp(total)}</span> → Neto −15,5%: <span>${clp(neto)}</span>`
+    : `40% de ${clp(costo)} = <span>${clp(total)}</span> → Neto −15,5%: <span>${clp(neto)}</span>`;
+}
+
+function submitForm() {
+  const fs = window._fs;
+  if (!fs.paciente.trim() || !fs.prestacion.trim()) {
+    toast('Paciente y prestación son obligatorios', '#EF4444'); return;
+  }
+  const entry = {
+    id:          editingId || uid(),
+    mes:         fs.mes,
+    fecha:       fs.fecha || null,
+    paciente:    fs.paciente.trim(),
+    prestacion:  fs.prestacion.trim(),
+    costo:       parseFloat(fs.costo) || 0,
+    boleta:      fs.boleta || null,
+    honorarios:  parseFloat(fs.honorarios) || null,
+    comentario:  fs.comentario || null
+  };
+  if (editingId) records = records.map(r => r.id === editingId ? entry : r);
+  else records.push(entry);
+  activeMonth = fs.mes;
+  persist();
+  closeForm();
+  toast(editingId ? 'Tratamiento actualizado ✓' : 'Tratamiento guardado ✓');
+}
+
+function closeForm() {
+  editingId = null;
+  document.getElementById('formView').classList.add('hidden');
+  document.getElementById('mainNav').classList.remove('hidden');
+  showTab(activeTab === 'form' ? 'home' : activeTab);
+}
+
+// ─── DELETE ───────────────────────────────────────────────────────────────────
+function confirmDel(id) {
+  const r = records.find(x => x.id === id);
+  document.getElementById('overlayEl').innerHTML = `
+    <div class="overlay" onclick="closeOverlay()">
+      <div class="modal" onclick="event.stopPropagation()">
+        <h3>ELIMINAR REGISTRO</h3>
+        <p>${r ? r.paciente + ' — ' + r.prestacion : 'Este tratamiento'} será eliminado permanentemente.</p>
+        <div class="modal-btns">
+          <button class="modal-btn" style="background:#1E293B;color:#F1F5F9" onclick="closeOverlay()">Cancelar</button>
+          <button class="modal-btn" style="background:#EF4444;color:#fff" onclick="doDelete('${id}')">Eliminar</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function doDelete(id) {
+  records = records.filter(r => r.id !== id);
+  persist();
+  closeOverlay();
+  renderHome();
+  toast('Registro eliminado', '#EF4444');
+}
+
+function closeOverlay() { document.getElementById('overlayEl').innerHTML = ''; }
+
+// ─── EXPOSE GLOBALS ───────────────────────────────────────────────────────────
+window.setMonth    = setMonth;
+window.openForm    = openForm;
+window.closeForm   = closeForm;
+window.renderForm  = renderForm;
+window.updateCalc  = updateCalc;
+window.submitForm  = submitForm;
+window.confirmDel  = confirmDel;
+window.doDelete    = doDelete;
+window.closeOverlay= closeOverlay;
+window.goToMonth   = goToMonth;
+window.showTab     = showTab;
+
+// ─── BOOT ─────────────────────────────────────────────────────────────────────
+renderHome();
+
+// ─── SERVICE WORKER ───────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/clinica-alcantar/sw.js');
+  });
+}
+</script>
+</body>
+</html>
